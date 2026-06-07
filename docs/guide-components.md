@@ -83,14 +83,20 @@ Příklady: `S201-B6`, `S201-C10`, `S201-C16`, `S203-C32`, `S204-C63`, `S803B-C1
 | Řada | Popis | Příklad |
 |------|-------|---------|
 | 5SL4 | 1P, moderní | 5SL4116-7 (1P, B16A) |
+| 5SL2 | 2P | 5SL2216-7 (2P, C16A) |
 | 5SL6 | 3P, průmyslová | 5SL6316-7 (3P, C16A) |
+| 5SL4 | 4P | 5SL4416-7 (4P, C16A) |
 | 5SY4 | 1P, starší | 5SY4116-7 |
 | 5SY6 | 3P, starší | 5SY6316-7 |
 | 5SP3 | 1P, RCBO | 5SP3416-2 |
 
-Kódování: `5SL{pol}` kde pol: 4=1P, 6=3P, číslo před char: 1=1P, 2=2P, 3=3P, 4=4P
-Char v kódu: za číslem pólů (B, C, D)
-Přípona `-7` = standardní vypínací charakteristika
+Kódování 5SL: `5SL{X}{pol}{char}{amp}-7`
+- X (typ): 4=1P, 2=2P, 6=3P, 4=4P (pozor: 4P sdílí X=4 s 1P, liší se polem pol)
+- pol: 1=1P, 2=2P, 3=3P, 4=4P
+- char: B, C, D
+- Příklady: `5SL4116-7` = 1P B16A, `5SL6316-7` = 3P C16A, `5SL6332-7` = 3P C32A
+Řada 5SY: starší (2000–2015), funkčně ekvivalentní, stále v databázi
+Přípona `-7` = standardní; `-6` = zvýšená zkratová odolnost
 
 #### Schneider Electric
 Řady: **iC60N**, **iC60H**, **iC60L** (Acti 9), **C120** (vyšší proud), **Multi9**
@@ -287,10 +293,14 @@ Zahrnuje dva podtypy:
 | 3RT2044 | 65A | 30kW |
 | 3RT2045 | 80A | 37kW |
 | 3RT2046 | 95A | 45kW |
+| 3RT2055 | 115A | 55kW |
+| 3RT2056 | 185A | 90kW |
+| 3RT2064 | 265A | 132kW |
+| 3RT2065 | 400A | 200kW |
 
 Přípona: `-1BB42` = cívka 24VDC, `-1AB00` = cívka 24VAC 50Hz, `-1AP00` = 230VAC
 Plný příklad: `3RT2016-1BB42` (9A, 24VDC cívka)
-Vyhledávání: `3RT2016`, `3RT20`, `Siemens stykač 9A`
+Vyhledávání: `3RT2016`, `3RT20`, `3RT2055`, `Siemens stykač 9A`
 
 Řada 3RH2 (pomocný stykač):
 - `3RH2122` (4NO kontakty)
@@ -315,9 +325,20 @@ Vyhledávání: `3RT2016`, `3RT20`, `Siemens stykač 9A`
 | LC1D80 | 80A | 37kW |
 | LC1D95 | 95A | 45kW |
 
+**TeSys F** – vyšší proudy (LC1F série)
+| Model | Ie/AC3 | Výkon 400V |
+|-------|--------|-----------|
+| LC1F115 | 115A | 55kW |
+| LC1F150 | 150A | 75kW |
+| LC1F185 | 185A | 90kW |
+| LC1F265 | 265A | 132kW |
+| LC1F400 | 400A | 200kW |
+| LC1F500 | 500A | 250kW |
+| LC1F630 | 630A | 315kW |
+
 Kód cívky (přípona): B7=24VAC, C7=36VAC, D7=42VAC, E7=48VAC, F7=110VAC, M7=220VAC, P7=230VAC, Q7=380VAC, BD=24VDC, LD=200VDC
-Plný příklad: `LC1D09B7` (9A, 24VAC), `LC1D12BD` (12A, 24VDC)
-Vyhledávání: `LC1D09`, `LC1D12`, `TeSys D`, `Schneider stykač`
+Plný příklad: `LC1D09B7` (9A, 24VAC), `LC1D12BD` (12A, 24VDC), `LC1F115BD` (115A, 24VDC)
+Vyhledávání: `LC1D09`, `LC1D12`, `LC1F115`, `TeSys D`, `TeSys F`, `Schneider stykač`
 
 Pomocné stykače: `CAD32`, `CAD50`, `CA2DN`
 
@@ -341,10 +362,12 @@ Pomocné stykače: `CAD32`, `CAD50`, `CA2DN`
 | AF26 | 26A |
 | AF38 | 38A |
 | AF65 | 65A |
+| AF110 | 110A |
+| AF210 | 210A |
 
 Přípona: `-30-10` = 3P, 1NO aux; `-30-10-70` = s elektr. cívkou; kód cívky: `230` = 220-240VAC, `024` = 24VDC
 Plný příklad: `A9-30-10` + spec. cívky blok, `AF09-30-10-13` (AF, 24–60V)
-Vyhledávání: `A9-30`, `A16-30`, `AF09`, `ABB stykač`
+Vyhledávání: `A9-30`, `A16-30`, `AF09`, `AF110`, `ABB stykač`
 
 Pomocné stykače: `CA4-10`, `CA4-22`, `CAL4-11`
 
@@ -364,10 +387,16 @@ Pomocné stykače: `CA4-10`, `CA4-22`, `CAL4-11`
 | DILM50 | 50A |
 | DILM65 | 65A |
 | DILM72 | 72A |
+| DILM80 | 80A |
+| DILM95 | 95A |
+| DILM115 | 115A |
+| DILM150 | 150A |
+| DILM185 | 185A |
+| DILM225 | 225A |
 
 Přípona: `-01` = 1NC aux, `-10` = 1NO aux, `-11` = 1NO+1NC, napětí v označení cívky
-Plný příklad: `DILM9-01(24VDC)`, `DILM12-10(230VAC)`
-Vyhledávání: `DILM9`, `DILM12`, `Eaton stykač`, `Moeller DILM`
+Plný příklad: `DILM9-01(24VDC)`, `DILM12-10(230VAC)`, `DILM115(230V50HZ)`
+Vyhledávání: `DILM9`, `DILM12`, `DILM80`, `DILM115`, `Eaton stykač`, `Moeller DILM`
 
 Pomocné stykače: `DILER-22`, `DILER-40`, `DILR`
 
@@ -606,6 +635,22 @@ Vyhledávání: `SDR-120`, `NDR-120`, `Mean Well 24V`, `SDR 24V`
 
 Vyhledávání: `MCS 24VDC`, `Murr 24V`, `Murr MCS`
 
+#### ABB (CP-E / CP-S série)
+**CP-E série** – DIN lišta, ekonomická řada
+| Výstup | Typ. označení |
+|--------|---------------|
+| 24VDC / 0,75A | CP-E 24/0.75 |
+| 24VDC / 1,0A | CP-E 24/1.0 |
+| 24VDC / 2,5A | CP-E 24/2.5 |
+| 24VDC / 5,0A | CP-E 24/5.0 |
+| 24VDC / 10,0A | CP-E 24/10.0 |
+| 24VDC / 20,0A | CP-E 24/20.0 |
+| 12VDC / 2,5A | CP-E 12/2.5 |
+| 48VDC / 5,0A | CP-E 48/5.0 |
+
+**CP-S série** – Standard, mírně vyšší funkce
+Vyhledávání: `CP-E 24`, `ABB CP-E`, `ABB PSU`, `CP-E 24/10.0`
+
 <!-- /section:napajeci-zdroj -->
 
 ---
@@ -774,8 +819,10 @@ Nejrozšířenější, špičková spolehlivost.
 
 | Řada | Popis | Rozsah kW | Napájení |
 |------|-------|-----------|---------|
+| ACS180 | Kompaktní základní | 0,25–22 | 1×230 / 3×400V |
 | ACS310 | Základní, 1-fáz. vstup | 0,37–7,5 | 1×230V |
 | ACS355 | Univerzální | 0,37–22 | 1×230 / 3×400V |
+| ACS380 | Kompaktní průmyslový | 0,25–22 | 3×400V |
 | ACS580 | Moderní, IoT | 0,75–250 | 3×400V |
 | ACS550 | Starší standard | 0,75–132 | 3×400V |
 | ACS800 | High performance | 0,55–5600 | 3×400V |
@@ -783,7 +830,8 @@ Nejrozšířenější, špičková spolehlivost.
 | ACH550 | HVAC verze | 0,75–355 | 3×400V |
 
 Typové označení ACS355: `ACS355-03E-04A1-4` (3-fázový vstup, 4,1A, 400V → 1,5kW)
-Vyhledávání: `ACS355`, `ACS580`, `ACS550`, `ABB VFD`, `ABB drive`
+Typové označení ACS180: `ACS180-04S-05A6-4` (3-fázový, 5,6A, 400V → 2,2kW)
+Vyhledávání: `ACS180`, `ACS355`, `ACS380`, `ACS580`, `ACS550`, `ABB VFD`, `ABB drive`
 
 #### Siemens (SINAMICS)
 | Řada | Popis | Rozsah kW |
@@ -846,6 +894,17 @@ Vyhledávání: `Lenze i550`, `SMVector`, `Lenze VFD`
 | MOVIDRIVE B | Pokročilý |
 
 Vyhledávání: `MOVITRAC`, `SEW VFD`
+
+#### WEG (brazilský výrobce, rostoucí podíl v Evropě)
+| Řada | Popis | Rozsah kW |
+|------|-------|-----------|
+| CFW100 | Mini kompaktní | 0,18–2,2 |
+| CFW300 | Kompaktní | 0,25–22 |
+| CFW500 | Průmyslový, DIN lišta | 0,25–75 |
+| CFW700 | Výkonný | 0,75–630 |
+| CFW11 | High-end, pokročilé řízení | 1,5–2400 |
+
+Vyhledávání: `WEG CFW`, `CFW500`, `CFW300`, `WEG VFD`
 
 <!-- /section:frekv-menic -->
 
@@ -934,6 +993,15 @@ Vyhledávání: `ATS22`, `Altistart`, `ATS01`, `Schneider softstartér`
 
 Vyhledávání: `DS7`, `Eaton softstartér`
 
+#### WEG (SSW série)
+| Řada | Proud | Popis |
+|------|-------|-------|
+| SSW05 | 3–65A | Kompaktní, základní |
+| SSW07 | 3–180A | Pokročilý, integrovaný bypass |
+| SSW100 | 23–1200A | Průmyslový, síťové funkce |
+
+Vyhledávání: `WEG SSW`, `SSW05`, `SSW07`, `SSW100`
+
 <!-- /section:soft-starter -->
 
 ---
@@ -966,26 +1034,46 @@ Zahrnuje:
 ### Výrobci a typová označení
 
 #### Block (německý výrobce, standard v průmyslu)
-| Řada | Popis | Příklad |
+| Řada | Popis | Příklady |
 |------|-------|---------|
-| VB | Bezpečnostní, SELV | VB 40/2x12 |
-| VC | Řídicí, oddělující | VC 250/230/24 |
-| VCT | Řídicí s více výstupy | VCT 160/230/24/12 |
-| VC-TP | Toroidní | |
+| VB | Bezpečnostní, SELV | VB 40/2x12 (40VA, 2×12VAC), VB 100/2x12, VB 160/2x24 |
+| VC | Řídicí, oddělující | VC 100/230/24 (100VA), VC 160/230/24, VC 250/230/24, VC 400/230/24 |
+| VCT | Řídicí s více výstupy | VCT 160/230/24/12, VCT 250/230/24/12 |
+| VC-TP | Toroidní provedení | |
+| BST | Bezpečnostní toroidní | BST 40/24 |
 
-Vyhledávání: `Block VC`, `Block VB`, `Block transformátor`
+Vyhledávání: `Block VC`, `Block VB`, `Block VC 250`, `Block transformátor`
 
-#### Siemens
-| Označení | Výkon | Příklad |
+#### Siemens (4AM série)
+| Označení | Výkon | Příklad / Popis |
 |----------|-------|---------|
-| 4AM6142 | 630VA | 4AM6142-8ED40-0EA0 |
+| 4AM3842 | 160VA | 4AM3842-8ED40-0EA0 (400V→230/24V) |
+| 4AM3882 | 250VA | 4AM3882-8ED40-0EA0 |
 | 4AM4842 | 400VA | 4AM4842-8ED40-0EA0 |
+| 4AM5142 | 630VA | 4AM5142-8ED40-0EA0 |
+| 4AM6142 | 1000VA | 4AM6142-8ED40-0EA0 |
 
-Vyhledávání: `4AM`, `Siemens transformátor`, `4AM6`
+Kódování 4AM: `4AM{VA_kód}{napětí}-{typ}`
+- VA kód: 38=160VA, 38=250VA, 48=400VA, 51=630VA, 61=1000VA
+- Přípona `8ED40-0EA0` = standardní průmyslové provedení
+
+Vyhledávání: `4AM`, `4AM4842`, `Siemens transformátor 400VA`
+
+#### Schneider Electric (ABT7 série)
+Řídicí transformátory do rozváděčů, EN 61558.
+| Model | Výkon |
+|-------|-------|
+| ABT7ES08B1E | 80VA |
+| ABT7ES16B2E | 160VA |
+| ABT7ES25B2E | 250VA |
+| ABT7ES40B2E | 400VA |
+| ABT7ES63B2E | 630VA |
+
+Vyhledávání: `ABT7`, `ABT7ES`, `Schneider transformátor`
 
 #### Murr Elektronik
-Řada MT: `MT 400/230/24` (400VA, 230→24VAC)
-Vyhledávání: `Murr trafo`, `MT 400`
+Řada MT: `MT 100/230/24` (100VA), `MT 250/230/24`, `MT 400/230/24`
+Vyhledávání: `Murr trafo`, `MT 400`, `Murr MT`
 
 #### ABB
 Řídicí transformátory pro průmysl
@@ -1034,30 +1122,36 @@ Typy:
 Největší evropský výrobce relé. Rozsáhlé portfolio.
 
 **Řada 40** – základní průmyslová (patice/DIN, 1CO/2CO)
-| Model | Kontakty | Typ cívky | Příklad |
-|-------|----------|-----------|---------|
-| 40.31 | 1CO (1A) | – | 40.31.9.024.0000 (24VDC) |
-| 40.31 | 1CO | – | 40.31.8.230.0000 (230VAC) |
-| 40.52 | 2CO | – | 40.52.9.024.0000 (24VDC) |
-| 40.61 | 3CO | – | 40.61.9.024.0000 |
-
-Patice pro řadu 40: **90.03** (1CO), **90.05** (2CO)
-
-**Řada 55** – výkonnější (3CO/4CO, 10A)
 | Model | Kontakty | Příklad |
 |-------|----------|---------|
-| 55.33 | 3CO | 55.33.9.024.0000 |
-| 55.34 | 4CO | 55.34.9.024.0000 |
-| 55.33 | 3CO | 55.33.8.230.0000 (230VAC) |
+| 40.31 | 1CO | 40.31.9.024.0000 (24VDC), 40.31.8.230.0000 (230VAC) |
+| 40.52 | 2CO | 40.52.9.024.0000 (24VDC), 40.52.8.230.0000 |
+| 40.61 | 3CO | 40.61.9.024.0000 |
 
-Patice: **95.03.3** (pro 55 série)
+Patice pro řadu 40:
+- **90.02** – pro 40.31 (1CO)
+- **90.03** – pro 40.31 (1CO, s LED + diodou)
+- **90.05** – pro 40.52 (2CO)
 
-**Řada 62** – miniaturní, PCB
-**Řada 60** – průmyslová 4CO
+**Řada 55** – výkonnější (3CO/4CO, 10A kontakty)
+| Model | Kontakty | Příklad |
+|-------|----------|---------|
+| 55.33 | 3CO | 55.33.9.024.0000 (24VDC), 55.33.8.230.0000 |
+| 55.34 | 4CO | 55.34.9.024.0000 (24VDC), 55.34.8.230.0000 |
 
-Kódování Finder: `{série}.{kontakty}.{napájecí}` kde napájecí: 9=DC, 8=AC
+Patice pro řadu 55:
+- **95.05** – pro 55.33/55.34 (standardní)
+- **95.85** – pro 55 série (s LED a funkcemi)
 
-Vyhledávání: `Finder 40.31`, `40.52`, `55.34`, `Finder relé`, `40.31.9.024`
+**Řada 62** – miniaturní PCB, 2CO, malé rozměry
+**Řada 60** – průmyslová 4CO, větší proud
+
+Kódování Finder: `{série}.{kontakty}.{napájení_kód}.{napětí}.0000`
+- Napájení kód: 9 = DC, 8 = AC
+- Napětí: 024 = 24V, 230 = 230V, 012 = 12V, 048 = 48V
+- Příklad: `40.31.9.024.0000` = 40.31, DC, 24V
+
+Vyhledávání: `Finder 40.31`, `40.52`, `55.34`, `Finder relé`, `40.31.9.024`, `90.02`, `95.05`
 
 #### Phoenix Contact (PLC-RSC / PLC-RSP)
 **PLC-RSC** – standardní DIN lišta
@@ -1096,9 +1190,20 @@ Vyhledávání: `RT314F24`, `Schrack relé`
 Řady: **G2R**, **G2E**, **MY**
 Vyhledávání: `Omron G2R`, `G2R-2`
 
+#### Siemens (3RP – časová relé)
+Multifunkční časová relé DIN lišta.
+| Model | Popis |
+|-------|-------|
+| 3RP2025-1BB30 | Časové relé, 24VDC, on-delay |
+| 3RP2025-1AP30 | Časové relé, 230VAC |
+| 3RP2500-1BW30 | Multifunkční, 24VDC |
+| 3RP2540-1BW30 | Multifunkční, 24VDC, star-delta |
+
+Vyhledávání: `3RP2025`, `3RP2500`, `Siemens časové relé`
+
 #### Takto hledat časová relé
 Pokud jde o **časové relé**, přidat do výrazu: `časové`, `timer`, `on-delay`, `off-delay`, nebo název funkce.
-Výrobci časových relé: Finder (86 série), Phoenix Contact, Siemens (3RP).
+Výrobci časových relé: Finder (86 série), Phoenix Contact, Siemens (3RP), Wago.
 
 <!-- /section:rele -->
 
@@ -1337,6 +1442,16 @@ Vyhledávání: `P1-25`, `Eaton odpojovač`, `Moeller P3`
 
 Vyhledávání: `VCF`, `VARIO`, `Schneider odpojovač`
 
+#### Hager (SBN série)
+Rotační bezpečnostní vypínač, 3-pólový, pro montáž do dveří.
+| Model | Proud |
+|-------|-------|
+| SBN332 | 32A, 3P |
+| SBN363 | 63A, 3P |
+| SBN3100 | 100A, 3P |
+
+Vyhledávání: `SBN332`, `SBN363`, `Hager SBN`, `Hager odpojovač`
+
 <!-- /section:hlavni-vypinac -->
 
 ---
@@ -1550,9 +1665,70 @@ Pro průchodky skříní, EMC
 
 Vyhledávání: `SK-GMK`, `Phoenix průchodka`
 
+#### Hummel (SM / LK série)
+Německý výrobce, kvalitní průmyslové průchodky.
+| Řada | Popis |
+|------|-------|
+| SM | Standardní plastová, PG a M závit |
+| LK | Lehká konstrukce, ekonomická |
+| SM-INOX | Nerezová 316L, IP69K – pro AGRO a potravinářství |
+| SM-VA-INOX | Nerezová s VA matkou |
+
+| Označení | Závit | Popis |
+|----------|-------|-------|
+| SM 16 | PG16 | Standardní plast |
+| SM-M20 | M20 | Standardní plast |
+| SM-INOX M20 | M20 | Nerezová 316L |
+| SM-INOX M25 | M25 | Nerezová 316L |
+
+Vyhledávání: `Hummel SM`, `SM-INOX`, `Hummel průchodka`
+
 #### Roxtec
-Modulární kabelové tranzity pro větší průchody více kabely.
+Modulární kabelové tranzity pro větší průchody více kabely (víceprůchodky).
 Vyhledávání: `Roxtec`
+
+---
+
+### Průchodky pro AGRO / Potravinářský průmysl (IP69K)
+
+V potravinářském průmyslu jsou vyžadovány průchodky z nerezové oceli 316L nebo speciálního plastu s krytím IP69K (odolnost vůči tlakovému mytí horkou vodou).
+
+#### Klíčové požadavky
+- Materiál: **nerez 316L** nebo **PA66 s přídavkem GF** (skleněná vlákna)
+- Krytí: **IP69K** (80 bar, 80°C) + IP67/IP68
+- Certifikace: EHEDG (hygiena), FDA (potravinářský kontakt)
+- Závity: nejčastěji **M20, M25, M32** metrické
+
+#### Lapp SKINTOP INOX / SKINTOP ST-M
+| Model | Závit | Materiál | Popis |
+|-------|-------|---------|-------|
+| SKINTOP ST-M20×1,5 INOX | M20 | Nerez 316L | IP69K, EHEDG |
+| SKINTOP ST-M25×1,5 INOX | M25 | Nerez 316L | IP69K |
+| SKINTOP ST-M32×1,5 INOX | M32 | Nerez 316L | IP69K |
+
+Vyhledávání: `SKINTOP INOX`, `Lapp INOX`, `SKINTOP ST INOX`
+
+#### ICOTEK KEL-DP (kabelová průchodka AGRO)
+Plastová průchodka (PA) pro více kabelů najednou – bez výřezu.
+Vyhledávání: `KEL-DP`, `ICOTEK průchodka`
+
+#### Hummel SM-INOX / SM-VA-INOX
+| Model | Závit | Materiál |
+|-------|-------|---------|
+| SM-INOX M16 | M16 | Nerez 316L, IP69K |
+| SM-INOX M20 | M20 | Nerez 316L, IP69K |
+| SM-INOX M25 | M25 | Nerez 316L, IP69K |
+| SM-INOX PG16 | PG16 | Nerez 316L |
+
+Vyhledávání: `SM-INOX`, `Hummel INOX`, `Hummel agro`
+
+#### Pflitsch BLUGARD
+Série speciálně pro AGRO prostředí, PA66-GF, modrá barva (detekce kovu).
+Vyhledávání: `BLUGARD`, `Pflitsch agro`
+
+#### Roxtec (AGRO tranzity)
+Pro průchod více kabelů přes panel, gumové moduly jsou sanitovatelné.
+Vyhledávání: `Roxtec agro`, `Roxtec hygiene`
 
 <!-- /section:pruchcdka -->
 
@@ -1617,6 +1793,15 @@ Vyhledávání: `SZ 2481`, `Rittal záslepka`, `Rittal SZ záslepka`
 #### Phoenix Contact
 Vyhledávání: `BS-M`, `Phoenix záslepka`
 
+#### Hummel (nerezové záslepky)
+| Model | Závit | Materiál |
+|-------|-------|---------|
+| BS-M20 INOX | M20 | Nerez 316L |
+| BS-M25 INOX | M25 | Nerez 316L |
+| BS-PG16 INOX | PG16 | Nerez 316L |
+
+Vyhledávání: `Hummel BS`, `BS-INOX`, `Hummel záslepka`
+
 #### Panelové záslepky (pro ovládací prvky 22mm)
 Pro zaslepení nevyužitých 22mm otvorů ovládacích panelů:
 - Schneider: `XB5 AV` série
@@ -1624,6 +1809,29 @@ Pro zaslepení nevyužitých 22mm otvorů ovládacích panelů:
 - Siemens: `3SB3400-0A`
 
 Vyhledávání: `22mm záslepka`, `M22-BLK`, `XB5AV`
+
+---
+
+### Záslepky pro AGRO / Potravinářský průmysl (IP69K)
+
+V AGRO prostředí musí i záslepky splňovat stejné hygienické požadavky jako průchodky – nerez 316L nebo speciální plastové materiály s krytím IP69K.
+
+#### Lapp SKINTOP BS INOX
+| Model | Závit | Materiál |
+|-------|-------|---------|
+| SKINTOP BS-M16 INOX | M16 | Nerez 316L, IP69K |
+| SKINTOP BS-M20 INOX | M20 | Nerez 316L, IP69K |
+| SKINTOP BS-M25 INOX | M25 | Nerez 316L, IP69K |
+
+Vyhledávání: `SKINTOP BS INOX`, `Lapp BS INOX`
+
+#### Rittal nerezové záslepky
+Pro skříně v AGRO provedení (Rittal HD série):
+Vyhledávání: `Rittal záslepka nerez`, `Rittal agro`
+
+#### Hummel BS-INOX
+Nerezové záslepky 316L s IP69K pro potravinářství.
+Vyhledávání: `BS-INOX M20`, `Hummel záslepka nerez`
 
 <!-- /section:zaslepka -->
 
