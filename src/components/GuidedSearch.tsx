@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, AlertTriangle, RotateCcw, ChevronRight, Loader2, FlaskConical, Search } from 'lucide-react';
 import type { Article, SearchResult } from '../types';
 import { search } from '../utils/searchEngine';
 import { ResultCard } from './ResultCard';
-import { COMPONENT_GUIDES, findComponentGuide, type ComponentGuide } from '../data/guideConfig';
+import {
+  COMPONENT_GUIDES, findComponentGuide, findNextActiveIndex,
+  type ComponentGuide,
+} from '../data/guideConfig';
 
 interface ConversationEntry {
   question: string;
@@ -27,10 +30,26 @@ export function GuidedSearch({ articles }: Props) {
   const [generatedQueries, setGeneratedQueries] = useState<string[]>([]);
   const [notFoundHint, setNotFoundHint] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
 
   const INITIAL_Q = 'Jakou komponentu hledáš?';
-  const INITIAL_PH = 'např. Jistič, Stykač, Relé, Kabel, Napájecí zdroj...';
+  const INITIAL_PH = 'např. Jistič, Stykač, Relé, Napájecí zdroj, DIN lišta...';
+
+  // Aktivní (podmínkám vyhovující) počet otázek pro aktuální stav odpovědí
+  const activeQuestionCount = useMemo(() => {
+    if (!guide) return 0;
+    return guide.questions.filter(q => !q.condition || q.condition(answers)).length;
+  }, [guide, answers]);
+
+  // Pořadí aktuální otázky mezi aktivními (1-based)
+  const activeQuestionPos = useMemo(() => {
+    if (!guide) return 0;
+    let pos = 0;
+    for (let i = 0; i <= questionIndex && i < guide.questions.length; i++) {
+      const q = guide.questions[i];
+      if (!q.condition || q.condition(answers)) pos++;
+    }
+    return pos;
+  }, [guide, questionIndex, answers]);
 
   useEffect(() => {
     if (phase !== 'beta-warning') {
@@ -38,27 +57,10 @@ export function GuidedSearch({ articles }: Props) {
     }
   }, [phase, questionIndex]);
 
-  const currentQ = (): string => {
-    if (phase === 'initial') return INITIAL_Q;
-    if (phase === 'questioning' && guide) return guide.questions[questionIndex].question;
-    return '';
-  };
+  const currentQ = guide?.questions[questionIndex];
 
-  const currentPH = (): string => {
-    if (phase === 'initial') return INITIAL_PH;
-    if (phase === 'questioning' && guide) return guide.questions[questionIndex].placeholder ?? 'Zadejte odpověď...';
-    return 'Zadejte odpověď...';
-  };
-
-  const currentOpts = (): string[] | undefined => {
-    if (phase === 'questioning' && guide) return guide.questions[questionIndex].options;
-    return undefined;
-  };
-
-  const isCurrentOptional = (): boolean => {
-    if (phase === 'questioning' && guide) return !!guide.questions[questionIndex].optional;
-    return false;
-  };
+  const currentOpts = currentQ?.options;
+  const isCurrentOptional = !!currentQ?.optional;
 
   const runSearches = useCallback((queries: string[]) => {
     setPhase('searching');
@@ -85,9 +87,10 @@ export function GuidedSearch({ articles }: Props) {
   const advanceAfterAnswer = useCallback(
     (newAnswers: Record<string, string>, newConv: ConversationEntry[]) => {
       if (!guide) return;
-      const nextIdx = questionIndex + 1;
+      // Najít další aktivní otázku (s ohledem na nové odpovědi)
+      const nextIdx = findNextActiveIndex(guide.questions, newAnswers, questionIndex + 1);
 
-      if (nextIdx >= guide.questions.length) {
+      if (nextIdx === null) {
         const queries = guide.generateQueries(newAnswers);
         setGeneratedQueries(queries);
         setConversation(newConv);
@@ -96,6 +99,7 @@ export function GuidedSearch({ articles }: Props) {
         setAnswers(newAnswers);
         setConversation(newConv);
         setQuestionIndex(nextIdx);
+        setInput('');
       }
     },
     [guide, questionIndex, runSearches]
@@ -103,45 +107,38 @@ export function GuidedSearch({ articles }: Props) {
 
   const submitAnswer = useCallback(
     (value: string) => {
-      if (!value.trim() && !isCurrentOptional()) return;
+      const trimmed = value.trim();
+      if (!trimmed && !isCurrentOptional) return;
 
       if (phase === 'initial') {
-        const found = findComponentGuide(value);
+        const found = findComponentGuide(trimmed);
         if (found) {
           setNotFoundHint(false);
           setGuide(found);
-          setConversation([{ question: INITIAL_Q, answer: value }]);
+          setConversation([{ question: INITIAL_Q, answer: trimmed }]);
           setQuestionIndex(0);
           setAnswers({});
+          setInput('');
           setPhase('questioning');
         } else {
           setNotFoundHint(true);
-          setConversation([]);
+          setInput('');
         }
-        setInput('');
         return;
       }
 
-      if (phase === 'questioning' && guide) {
-        const q = guide.questions[questionIndex];
-        const newAnswers = { ...answers, [q.id]: value.trim() };
-        const newConv = [...conversation, { question: q.question, answer: value.trim() || '(přeskočeno)' }];
-        setInput('');
+      if (phase === 'questioning' && guide && currentQ) {
+        const newAnswers = { ...answers, [currentQ.id]: trimmed || '(přeskočeno)' };
+        const displayAnswer = trimmed || '(přeskočeno)';
+        const newConv = [...conversation, { question: currentQ.question, answer: displayAnswer }];
         advanceAfterAnswer(newAnswers, newConv);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [phase, guide, questionIndex, answers, conversation, advanceAfterAnswer]
+    [phase, guide, currentQ, answers, conversation, isCurrentOptional, advanceAfterAnswer]
   );
 
-  const handleOptionClick = (opt: string) => {
-    setInput(opt);
-    submitAnswer(opt);
-  };
-
-  const handleSkip = () => {
-    submitAnswer('');
-  };
+  const handleOptionClick = (opt: string) => submitAnswer(opt);
 
   const handleReset = () => {
     setPhase('initial');
@@ -155,7 +152,7 @@ export function GuidedSearch({ articles }: Props) {
     setNotFoundHint(false);
   };
 
-  // ── Beta warning ────────────────────────────────────────────────────────────
+  // ── Beta warning ─────────────────────────────────────────────────────────
   if (phase === 'beta-warning') {
     return (
       <div className="fixed inset-0 bg-base/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -174,14 +171,14 @@ export function GuidedSearch({ articles }: Props) {
           </div>
 
           <p className="text-subtext1 mb-4 leading-relaxed text-sm">
-            Průvodce vás provede strukturovaným vyhledáváním pomocí série otázek. Na základě
+            Průvodce vás provede strukturovaným vyhledáváním pomocí série otázek a na základě
             vašich odpovědí automaticky vygeneruje optimalizované vyhledávací výrazy.
           </p>
 
-          <div className="bg-surface0 rounded-xl p-4 mb-6 space-y-2">
+          <div className="bg-surface0 rounded-xl p-4 mb-6 space-y-1.5">
             <p className="text-xs text-overlay1 uppercase tracking-wide font-medium mb-2">Upozornění</p>
-            <p className="text-sm text-subtext0">• Průvodce zatím podporuje omezenou sadu komponent</p>
-            <p className="text-sm text-subtext0">• Výsledky závisí na obsahu databáze</p>
+            <p className="text-sm text-subtext0">• Průvodce podporuje omezenou sadu komponent (15 typů)</p>
+            <p className="text-sm text-subtext0">• Výsledky závisí na obsahu vybrané databáze</p>
             <p className="text-sm text-subtext0">• Funkce je aktivně vyvíjena a může se měnit</p>
           </div>
 
@@ -196,26 +193,21 @@ export function GuidedSearch({ articles }: Props) {
     );
   }
 
-  // ── Main layout ─────────────────────────────────────────────────────────────
+  // ── Main layout ───────────────────────────────────────────────────────────
   return (
-    <div className="flex gap-4" style={{ minHeight: '520px' }}>
+    <div className="flex gap-4" style={{ minHeight: '540px' }}>
 
-      {/* ── Left: history sidebar ─────────────────────────────────────────── */}
+      {/* Left: history */}
       <div className="w-52 flex-shrink-0 bg-mantle rounded-2xl p-4 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-3">
           <span className="text-subtext0 text-xs uppercase tracking-wide font-medium">Průběh</span>
           {(conversation.length > 0 || phase === 'results') && (
-            <button
-              onClick={handleReset}
-              title="Začít znovu"
-              className="text-overlay1 hover:text-red transition-colors"
-            >
+            <button onClick={handleReset} title="Začít znovu" className="text-overlay1 hover:text-red transition-colors">
               <RotateCcw size={13} />
             </button>
           )}
         </div>
 
-        {/* Conversation history */}
         <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
           {conversation.length === 0 && phase === 'initial' ? (
             <p className="text-overlay0 text-xs leading-relaxed">
@@ -234,17 +226,17 @@ export function GuidedSearch({ articles }: Props) {
           )}
 
           {guide && phase === 'questioning' && (
-            <div className="pt-2 border-t border-surface1 mt-2">
+            <div className="pt-2 border-t border-surface1 mt-1">
               <p className="text-xs text-overlay0">
-                {questionIndex + 1} / {guide.questions.length}
+                Otázka {activeQuestionPos} / {activeQuestionCount}
               </p>
             </div>
           )}
         </div>
 
-        {/* Component list (shown during initial phase) */}
+        {/* Component list during initial phase */}
         {phase === 'initial' && (
-          <div className="mt-4 border-t border-surface1 pt-4 overflow-y-auto">
+          <div className="mt-4 border-t border-surface1 pt-4 flex-shrink-0 overflow-y-auto" style={{ maxHeight: '280px' }}>
             <p className="text-xs text-overlay0 uppercase tracking-wide mb-2">Podporované</p>
             <div className="space-y-1">
               {COMPONENT_GUIDES.map(g => (
@@ -261,13 +253,12 @@ export function GuidedSearch({ articles }: Props) {
         )}
       </div>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
+      {/* Main content */}
       <div className="flex-1 bg-mantle rounded-2xl p-6 flex flex-col min-w-0">
 
-        {/* Questions phase */}
+        {/* Questioning / Initial */}
         {(phase === 'initial' || phase === 'questioning') && (
           <>
-            {/* Guide info pill */}
             {guide && (
               <div className="mb-5 flex items-center gap-2">
                 <span className="text-sm font-semibold text-mauve">{guide.name}</span>
@@ -275,22 +266,37 @@ export function GuidedSearch({ articles }: Props) {
               </div>
             )}
 
-            {/* Current question */}
             <div className="flex-1 flex flex-col justify-center max-w-2xl">
+              {/* Question text */}
               <p className="text-2xl md:text-3xl text-text font-medium mb-6 leading-snug">
-                {currentQ()}
+                {phase === 'initial' ? INITIAL_Q : (currentQ?.question ?? '')}
               </p>
 
-              {/* Quick-pick options */}
-              {currentOpts() && (
+              {/* Option chips */}
+              {currentOpts && (
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {currentOpts()!.map(opt => (
+                  {currentOpts.map(opt => (
                     <button
                       key={opt}
                       onClick={() => handleOptionClick(opt)}
                       className="px-4 py-2 rounded-xl bg-surface0 hover:bg-mauve hover:text-crust text-sm text-subtext1 transition-all"
                     >
                       {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Manufacturer chips for 'vyrobce' question */}
+              {guide && phase === 'questioning' && currentQ?.id === 'vyrobce' && (
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {guide.knownManufacturers.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => handleOptionClick(m)}
+                      className="px-3 py-1 rounded-lg bg-surface0 hover:bg-mauve hover:text-crust text-xs text-subtext0 transition-all"
+                    >
+                      {m}
                     </button>
                   ))}
                 </div>
@@ -305,29 +311,6 @@ export function GuidedSearch({ articles }: Props) {
                   </p>
                 </div>
               )}
-
-              {/* Known manufacturers hint */}
-              {guide && phase === 'questioning' && questionIndex < guide.questions.length && (
-                (() => {
-                  const q = guide.questions[questionIndex];
-                  if (q.id === 'vyrobce' && guide.knownManufacturers.length > 0) {
-                    return (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {guide.knownManufacturers.map(m => (
-                          <button
-                            key={m}
-                            onClick={() => handleOptionClick(m)}
-                            className="px-3 py-1 rounded-lg bg-surface0 hover:bg-mauve hover:text-crust text-xs text-subtext0 transition-all"
-                          >
-                            {m}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                })()
-              )}
             </div>
 
             {/* Input row */}
@@ -337,20 +320,24 @@ export function GuidedSearch({ articles }: Props) {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') submitAnswer(input); }}
-                placeholder={currentPH()}
+                placeholder={
+                  phase === 'initial'
+                    ? INITIAL_PH
+                    : (currentQ?.placeholder ?? 'Zadejte odpověď...')
+                }
                 className="flex-1 bg-surface0 rounded-xl px-4 py-3 text-text placeholder:text-overlay0 outline-none focus:ring-2 focus:ring-mauve transition-all text-sm"
               />
-              {isCurrentOptional() && (
+              {isCurrentOptional && (
                 <button
-                  onClick={handleSkip}
-                  className="px-4 py-3 rounded-xl bg-surface0 hover:bg-surface1 text-subtext0 text-sm transition-all"
+                  onClick={() => submitAnswer('')}
+                  className="px-4 py-3 rounded-xl bg-surface0 hover:bg-surface1 text-subtext0 text-sm transition-all whitespace-nowrap"
                 >
                   Přeskočit
                 </button>
               )}
               <button
                 onClick={() => submitAnswer(input)}
-                disabled={!input.trim() && !isCurrentOptional()}
+                disabled={!input.trim() && !isCurrentOptional}
                 className="px-5 py-3 bg-mauve text-crust rounded-xl font-medium disabled:opacity-40 hover:opacity-90 transition-all flex items-center gap-2"
               >
                 <Send size={15} />
@@ -360,7 +347,7 @@ export function GuidedSearch({ articles }: Props) {
           </>
         )}
 
-        {/* Searching phase */}
+        {/* Searching */}
         {phase === 'searching' && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5">
             <Loader2 className="text-mauve animate-spin" size={44} />
@@ -373,10 +360,9 @@ export function GuidedSearch({ articles }: Props) {
           </div>
         )}
 
-        {/* Results phase */}
+        {/* Results */}
         {phase === 'results' && (
-          <div className="flex flex-col gap-4 overflow-hidden min-h-0 h-full" ref={resultsRef}>
-            {/* Header bar */}
+          <div className="flex flex-col gap-4 overflow-hidden min-h-0 h-full">
             <div className="flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
               <div className="flex flex-wrap gap-2 items-center min-w-0">
                 <Search size={14} className="text-subtext0 flex-shrink-0" />
@@ -399,7 +385,6 @@ export function GuidedSearch({ articles }: Props) {
               </div>
             </div>
 
-            {/* Results list */}
             <div className="overflow-y-auto space-y-3 flex-1 min-h-0 pr-1">
               {searchResults.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
