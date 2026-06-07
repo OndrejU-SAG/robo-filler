@@ -17,6 +17,7 @@ import { BulkSearch } from './components/BulkSearch';
 import { ChatBot } from './components/ChatBot';
 import { AiChat } from './components/AiChat';
 import { AiBomBuilder } from './components/AiBomBuilder';
+import { GuidedSearch } from './components/GuidedSearch';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -327,6 +328,23 @@ function App() {
               AI mód
             </button>
           )}
+          <button
+            onClick={() => setAppMode('guided')}
+            className={`px-5 py-2 rounded-xl font-medium transition-all flex items-center gap-2 ${
+              appMode === 'guided'
+                ? 'bg-mauve text-crust shadow-lg'
+                : 'text-subtext1 hover:text-text'
+            }`}
+          >
+            Řízený
+            <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
+              appMode === 'guided'
+                ? 'bg-crust/30 text-crust'
+                : 'bg-yellow/20 text-yellow'
+            }`}>
+              BETA
+            </span>
+          </button>
         </div>
 
         {/* Data source toggle and advanced settings */}
@@ -502,6 +520,10 @@ function App() {
                   </div>
                 )}
               </div>
+            )}
+
+            {appMode === 'guided' && (
+              <GuidedSearch articles={activeArticles} />
             )}
 
             {appMode === 'bulk' && (
